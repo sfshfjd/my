@@ -40,3 +40,29 @@ INSERT INTO users (username, email, password, role) VALUES
 -- ALTER TABLE users MODIFY COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间';
 -- ALTER TABLE users COMMENT='用户表';
 
+-- 创建文件记录表
+CREATE TABLE IF NOT EXISTS file_records (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '文件记录ID（主键）',
+    original_name VARCHAR(255) NOT NULL COMMENT '原始文件名',
+    stored_name VARCHAR(255) NOT NULL UNIQUE COMMENT '存储文件名（唯一）',
+    file_path VARCHAR(500) NOT NULL COMMENT '文件存储路径',
+    file_size BIGINT COMMENT '文件大小（字节）',
+    file_type VARCHAR(100) COMMENT '文件类型（MIME类型）',
+    category ENUM('DOCUMENT', 'VIDEO', 'IMAGE', 'OTHER') NOT NULL COMMENT '文件分类',
+    uploaded_by BIGINT NOT NULL COMMENT '上传用户ID',
+    description TEXT COMMENT '文件描述',
+    is_active BOOLEAN NOT NULL DEFAULT TRUE COMMENT '是否有效（软删除标记）',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    
+    -- 外键约束
+    CONSTRAINT fk_file_uploaded_by FOREIGN KEY (uploaded_by) REFERENCES users(id) ON DELETE CASCADE,
+    
+    -- 索引
+    INDEX idx_uploaded_by (uploaded_by),
+    INDEX idx_category (category),
+    INDEX idx_created_at (created_at),
+    INDEX idx_is_active (is_active),
+    INDEX idx_file_type (file_type)
+) COMMENT='文件记录表';
+

@@ -68,6 +68,7 @@ public class WebSecurityConfig {
                 .requestMatchers("/swagger-ui.html").permitAll()
                 .requestMatchers("/swagger-resources/**").permitAll()
                 .requestMatchers("/webjars/**").permitAll()
+                // 文件上传下载接口需要认证 - /api/files/** 由下面的 anyRequest().authenticated() 保护
                 .anyRequest().authenticated();
         
         http.authenticationProvider(authenticationProvider());
