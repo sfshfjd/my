@@ -42,10 +42,15 @@ public class AuthController {
             @ApiResponse(responseCode = "401", description = "用户名或密码错误"),
             @ApiResponse(responseCode = "400", description = "参数验证失败")
     })
-    @PostMapping("/login")
+    
+    /*@PostMapping("/login")
     public ResponseEntity<?> authenticateUser(
             @Parameter(description = "登录信息", required = true)
             @Valid @RequestBody LoginRequest loginRequest) {
+
+        System.out.println("DEBUG LOGIN username=" + loginRequest.getUsername()
+        + " password=[" + loginRequest.getPassword() + "] len="
+        + (loginRequest.getPassword()==null? "null" : loginRequest.getPassword().length()));
         try {
             Authentication authentication = authService.authenticateUser(loginRequest);
             String jwt = jwtUtils.generateJwtToken(authentication);
@@ -61,6 +66,50 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(com.example.mentalhealth.dto.ApiResponse.error("用户名或密码错误", 401));
         }
+    }*/
+
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@Valid @RequestBody LoginRequest req) {
+        Authentication auth;
+        try {
+            auth = authService.authenticateUser(req);
+        } catch (org.springframework.security.authentication.BadCredentialsException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(com.example.mentalhealth.dto.ApiResponse.error("密码错误", 401));
+        } catch (org.springframework.security.core.userdetails.UsernameNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(com.example.mentalhealth.dto.ApiResponse.error("用户不存在", 401));
+        }
+
+        Object principal = auth.getPrincipal();
+        User user;
+        if (principal instanceof User u) {
+            user = u;
+        } else if (principal instanceof org.springframework.security.core.userdetails.UserDetails ud) {
+            // 如果实际返回的是框架默认 UserDetails，需要再查数据库
+            user = authService.findByUsername(ud.getUsername()).orElse(null);
+        } else {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(com.example.mentalhealth.dto.ApiResponse.error("Principal类型异常", 500));
+        }
+
+        String jwt;
+        try {
+            jwt = jwtUtils.generateJwtToken(auth);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(com.example.mentalhealth.dto.ApiResponse.error("JWT生成失败: " + e.getMessage(), 500));
+        }
+
+        JwtResponse data = new JwtResponse(
+                jwt,
+                user != null ? user.getId() : null,
+                user != null ? user.getUsername() : null,
+                user != null ? user.getEmail() : null
+        );
+
+        return ResponseEntity.ok(com.example.mentalhealth.dto.ApiResponse.success("登录成功", data));
     }
     
     /**

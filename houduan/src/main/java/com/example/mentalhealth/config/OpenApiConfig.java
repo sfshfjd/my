@@ -22,7 +22,7 @@ public class OpenApiConfig {
                         .version("v1.0.0")
                         .contact(new Contact()
                                 .name("心理健康管理系统")
-                                .url("http://localhost:8080")
+                                .url("http://localhost:9000")
                                 .email("admin@mentalhealth.com"))
                         .license(new License()
                                 .name("Apache 2.0")
