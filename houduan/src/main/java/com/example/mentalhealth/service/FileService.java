@@ -58,20 +58,15 @@ public class FileService {
         try {
             // 验证文件
             validateFile(file);
-            
             // 确定文件分类
             FileRecord.FileCategory category = determineFileCategory(file.getOriginalFilename());
-            
             // 生成存储文件名
             String storedName = generateStoredFileName(file.getOriginalFilename());
-            
             // 创建上传目录
             Path uploadPath = createUploadDirectory(category);
-            
             // 保存文件到磁盘
             Path filePath = uploadPath.resolve(storedName);
             Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
-            
             // 保存文件记录到数据库
             FileRecord fileRecord = new FileRecord(
                 file.getOriginalFilename(),
@@ -84,14 +79,10 @@ public class FileService {
             );
             fileRecord.setDescription(description);
             fileRecord = fileRecordRepository.save(fileRecord);
-            
             // 生成下载URL
             String downloadUrl = generateDownloadUrl(fileRecord.getId());
-            
             logger.info("文件上传成功: {} (用户: {})", file.getOriginalFilename(), user.getUsername());
-            
             return new FileUploadResponse(fileRecord, downloadUrl);
-            
         } catch (Exception e) {
             logger.error("文件上传失败: {}", e.getMessage(), e);
             throw new RuntimeException("文件上传失败: " + e.getMessage());
@@ -108,15 +99,12 @@ public class FileService {
             if (fileRecordOpt.isEmpty()) {
                 throw new RuntimeException("文件不存在或无权限访问");
             }
-            
             FileRecord fileRecord = fileRecordOpt.get();
             Path filePath = Paths.get(fileRecord.getFilePath());
-            
             // 检查文件是否存在
             if (!Files.exists(filePath)) {
                 throw new RuntimeException("文件不存在: " + fileRecord.getOriginalName());
             }
-            
             Resource resource = new UrlResource(filePath.toUri());
             if (resource.exists() && resource.isReadable()) {
                 logger.info("文件下载: {} (用户: {})", fileRecord.getOriginalName(), user.getUsername());
@@ -124,7 +112,6 @@ public class FileService {
             } else {
                 throw new RuntimeException("无法读取文件: " + fileRecord.getOriginalName());
             }
-            
         } catch (Exception e) {
             logger.error("文件下载失败: {}", e.getMessage(), e);
             throw new RuntimeException("文件下载失败: " + e.getMessage());

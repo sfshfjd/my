@@ -66,3 +66,36 @@ CREATE TABLE IF NOT EXISTS file_records (
     INDEX idx_file_type (file_type)
 ) COMMENT='文件记录表';
 
+-- 创建问卷表
+CREATE TABLE IF NOT EXISTS questionnaires (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '问卷ID（主键）',
+    title VARCHAR(255) NOT NULL COMMENT '问卷标题',
+    description TEXT COMMENT '问卷描述',
+    original_name VARCHAR(255) NOT NULL COMMENT '原始文件名',
+    stored_name VARCHAR(255) NOT NULL UNIQUE COMMENT '存储文件名（唯一）',
+    file_path VARCHAR(500) NOT NULL COMMENT '文件存储路径',
+    file_size BIGINT COMMENT '文件大小（字节）',
+    file_type VARCHAR(100) COMMENT '文件类型（MIME类型）',
+    status ENUM('DRAFT', 'PUBLISHED', 'ARCHIVED') NOT NULL DEFAULT 'DRAFT' COMMENT '问卷状态',
+    created_by BIGINT NOT NULL COMMENT '创建用户ID',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    published_at TIMESTAMP NULL COMMENT '发布时间',
+    is_active BOOLEAN NOT NULL DEFAULT TRUE COMMENT '是否有效（软删除标记）',
+    category VARCHAR(100) COMMENT '问卷分类',
+    tags VARCHAR(500) COMMENT '标签（用逗号分隔）',
+    download_count INT DEFAULT 0 COMMENT '下载次数',
+    
+    -- 外键约束
+    CONSTRAINT fk_questionnaire_created_by FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE CASCADE,
+    
+    -- 索引
+    INDEX idx_created_by (created_by),
+    INDEX idx_status (status),
+    INDEX idx_category (category),
+    INDEX idx_created_at (created_at),
+    INDEX idx_published_at (published_at),
+    INDEX idx_is_active (is_active),
+    INDEX idx_download_count (download_count)
+) COMMENT='问卷表';
+
