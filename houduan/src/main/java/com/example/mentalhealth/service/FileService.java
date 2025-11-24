@@ -129,6 +129,14 @@ public class FileService {
     }
     
     /**
+     * 管理员分页获取全部文件
+     */
+    public Page<FileInfoResponse> getAllFiles(Pageable pageable) {
+        Page<FileRecord> files = fileRecordRepository.findByIsActiveTrueOrderByCreatedAtDesc(pageable);
+        return files.map(file -> new FileInfoResponse(file, generateDownloadUrl(file.getId())));
+    }
+    
+    /**
      * 分页获取用户的文件列表
      */
     public Page<FileInfoResponse> getUserFiles(User user, Pageable pageable) {
@@ -184,6 +192,51 @@ public class FileService {
         
         FileRecord fileRecord = fileRecordOpt.get();
         return new FileInfoResponse(fileRecord, generateDownloadUrl(fileRecord.getId()));
+    }
+    
+    /**
+     * 管理员获取任意文件信息
+     */
+    public FileInfoResponse getFileInfoAsAdmin(Long fileId) {
+        FileRecord fileRecord = fileRecordRepository.findByIdAndIsActiveTrue(fileId)
+                .orElseThrow(() -> new RuntimeException("文件不存在"));
+        return new FileInfoResponse(fileRecord, generateDownloadUrl(fileRecord.getId()));
+    }
+    
+    /**
+     * 管理员下载任意文件
+     */
+    public Resource downloadFileAsAdmin(Long fileId) {
+        FileRecord fileRecord = fileRecordRepository.findByIdAndIsActiveTrue(fileId)
+                .orElseThrow(() -> new RuntimeException("文件不存在"));
+        Path filePath = Paths.get(fileRecord.getFilePath());
+        try {
+            if (!Files.exists(filePath)) {
+                throw new RuntimeException("文件不存在: " + fileRecord.getOriginalName());
+            }
+            Resource resource = new UrlResource(filePath.toUri());
+            if (resource.exists() && resource.isReadable()) {
+                logger.info("管理员下载文件: {}", fileRecord.getOriginalName());
+                return resource;
+            } else {
+                throw new RuntimeException("无法读取文件: " + fileRecord.getOriginalName());
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("文件下载失败: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * 管理员删除文件（软删除）
+     */
+    public void deleteFileAsAdmin(Long fileId) {
+        FileRecord fileRecord = fileRecordRepository.findByIdAndIsActiveTrue(fileId)
+                .orElseThrow(() -> new RuntimeException("文件不存在"));
+        fileRecord.setIsActive(false);
+        fileRecord.setUpdatedAt(LocalDateTime.now());
+        fileRecordRepository.save(fileRecord);
+        
+        logger.info("管理员删除文件: {}", fileRecord.getOriginalName());
     }
     
     /**

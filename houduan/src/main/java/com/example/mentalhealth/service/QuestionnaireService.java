@@ -169,6 +169,15 @@ public class QuestionnaireService {
     }
     
     /**
+     * 管理员分页获取所有问卷
+     */
+    public Page<QuestionnaireInfoResponse> getAllQuestionnaires(Pageable pageable) {
+        Page<Questionnaire> questionnaires = questionnaireRepository
+                .findByIsActiveTrueOrderByCreatedAtDesc(pageable);
+        return questionnaires.map(q -> new QuestionnaireInfoResponse(q, generateDownloadUrl(q.getId())));
+    }
+    
+    /**
      * 获取所有已发布的问卷
      */
     public List<QuestionnaireInfoResponse> getPublishedQuestionnaires() {
@@ -288,6 +297,19 @@ public class QuestionnaireService {
         questionnaireRepository.save(questionnaire);
         
         logger.info("问卷已删除: {} (用户: {})", questionnaire.getTitle(), user.getUsername());
+    }
+    
+    /**
+     * 管理员删除问卷（软删除）
+     */
+    public void deleteQuestionnaireAsAdmin(Long questionnaireId) {
+        Questionnaire questionnaire = questionnaireRepository.findByIdAndIsActiveTrue(questionnaireId)
+                .orElseThrow(() -> new RuntimeException("问卷不存在"));
+        questionnaire.setIsActive(false);
+        questionnaire.setUpdatedAt(LocalDateTime.now());
+        questionnaireRepository.save(questionnaire);
+        
+        logger.info("管理员删除问卷: {}", questionnaire.getTitle());
     }
     
     /**

@@ -60,6 +60,9 @@ public interface FileRecordRepository extends JpaRepository<FileRecord, Long> {
     // 查找所有活跃文件（管理员使用）
     Page<FileRecord> findByIsActiveTrueOrderByCreatedAtDesc(Pageable pageable);
     
+    // 根据ID查找文件（管理员使用）
+    Optional<FileRecord> findByIdAndIsActiveTrue(Long id);
+    
     // 根据ID和用户查找文件（确保用户只能访问自己的文件）
     Optional<FileRecord> findByIdAndUploadedByAndIsActiveTrue(Long id, User uploadedBy);
     

@@ -43,6 +43,9 @@ public interface QuestionnaireRepository extends JpaRepository<Questionnaire, Lo
     @Query("SELECT q FROM Questionnaire q WHERE q.createdBy = :user AND q.title LIKE %:title% AND q.isActive = true ORDER BY q.createdAt DESC")
     List<Questionnaire> findByCreatedByAndTitleContaining(@Param("user") User user, @Param("title") String title);
     
+    // 查找所有问卷（管理员查看）
+    Page<Questionnaire> findByIsActiveTrueOrderByCreatedAtDesc(Pageable pageable);
+    
     // 查找所有已发布的问卷
     List<Questionnaire> findByStatusAndIsActiveTrueOrderByPublishedAtDesc(Questionnaire.QuestionnaireStatus status);
     

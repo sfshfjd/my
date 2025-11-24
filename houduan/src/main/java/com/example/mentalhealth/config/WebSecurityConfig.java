@@ -68,7 +68,9 @@ public class WebSecurityConfig {
                 .requestMatchers("/swagger-ui.html").permitAll()
                 .requestMatchers("/swagger-resources/**").permitAll()
                 .requestMatchers("/webjars/**").permitAll()
+                // 管理员接口需要ADMIN角色 - /api/admin/** 由@PreAuthorize注解保护
                 // 文件上传下载接口需要认证 - /api/files/** 由下面的 anyRequest().authenticated() 保护
+                // 问卷管理接口需要认证 - /api/questionnaires/** 由下面的 anyRequest().authenticated() 保护
                 .anyRequest().authenticated();
         
         http.authenticationProvider(authenticationProvider());
